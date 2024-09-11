@@ -3,7 +3,10 @@ from .models import DoctorModel
 class DoctorCreateSerializer(serializers.ModelSerializer):
      class Meta:
         model=DoctorModel
-        fields = ['speciality', 'license_no', 'organization_name', 'location', 'phone_number', 'experience']
+        fields = '__all__'
+        extra_kwargs = {
+            'user': {'read_only': True}  # Make user read-only in the serializer
+        }
      def create(self, validated_data):
         # We don't need to handle user here, it's done in the view.
              profile = DoctorModel.objects.create(**validated_data)
@@ -16,6 +19,7 @@ class DoctorCreateSerializer(serializers.ModelSerializer):
                 instance.save()
             return instance
 class GetDoctorSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source='user.email', read_only=True)
     class Meta:
         model = DoctorModel
-        fields="__all__"
+        fields = ['id', 'speciality', 'license_no', 'organization_name', 'location', 'phone_number', 'experiance', 'available_status', 'image', 'user_email']

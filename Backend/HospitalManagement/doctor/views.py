@@ -10,11 +10,13 @@ from user.models import User
 from . models import DoctorModel
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.parsers import MultiPartParser, FormParser
 import jwt
 class DoctorCreateView(generics.CreateAPIView, generics.UpdateAPIView):
     serializer_class = DoctorCreateSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
+    parser_classes = (MultiPartParser, FormParser)
     def get_object(self):
         try:
             return DoctorModel.objects.get(user=self.request.user)
@@ -30,7 +32,8 @@ class DoctorCreateView(generics.CreateAPIView, generics.UpdateAPIView):
         if serializer.is_valid():
             self.perform_create(serializer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:         
+        else:     
+            print(serializer.errors)    
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -65,7 +68,7 @@ class GetDoctordata(APIView):
             try:
                 doctor = DoctorModel.objects.get(user=user)
                  
-
+                print(doctor)
                 
               
             except DoctorModel.DoesNotExist:
@@ -73,7 +76,8 @@ class GetDoctordata(APIView):
            
             # Serialize the patient profile
             serializer = GetDoctorSerializer(doctor)
-            print("serializer is",serializer)
+            
+            print("serializer is",serializer.data)
           
     
             if not serializer.data:
