@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'user',
     'patient',
     'doctor',
+    'appointment',
     'rest_framework',
     'rest_framework.authtoken',
     "corsheaders",

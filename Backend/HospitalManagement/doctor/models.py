@@ -17,7 +17,7 @@ class DoctorModel(models.Model):
     available_status=models.TextField(null=True)
     image=models.ImageField(upload_to='image/',default='default_images/default_avatar.png')
 
-
+    unique_together=("doctor","date","time")
 
     def __str__(self):
         return self.user.username
