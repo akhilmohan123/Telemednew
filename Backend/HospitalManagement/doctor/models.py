@@ -20,7 +20,7 @@ class DoctorModel(models.Model):
     unique_together=("doctor","date","time")
 
     def __str__(self):
-        return self.user.username
+        return self.user.email
 
 
 
