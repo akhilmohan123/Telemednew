@@ -13,4 +13,4 @@ class PatientProfile(models.Model):
     additional_information=models.TextField()
 
     def __str__(self):
-        return self.user.username
+        return self.user.email

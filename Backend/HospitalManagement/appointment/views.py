@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .serializers import AppointmentSerializers,GetdoctorAppointmentserializer
+from .serializers import AppointmentSerializers,GetdoctorAppointmentserializer,GetspeceficSerializer,EditPatientSerializer
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from patient.authentication import JWTAuthentication
 from django.shortcuts import get_object_or_404
@@ -88,5 +88,44 @@ class GetDoctorAppointment(APIView):
             raise AuthenticationFailed("Invalid token")
         except User.DoesNotExist:
             raise AuthenticationFailed("User not found")
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+class GetSpeceficPatient(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    def get(self,request,id):
+        patient=get_object_or_404(Appointmentmodel,id=id)
+        
+        serializer=GetspeceficSerializer(patient)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+class EditDoctorView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def put(self, request, id):
+        try:
+            appointment = Appointmentmodel.objects.get(id=id)
+            new_status = request.data.get('status')
+            new_refer = request.data.get('refer')
+            print(new_refer)
+            # Update refer doctor if provided
+            if new_refer:
+                refer_doctor_instance=DoctorModel.objects.get(id=new_refer)
+                appointment.refer_doctor = refer_doctor_instance
+           
+            # Update appointment status if provided
+            if new_status:
+                appointment.status = new_status
+           
+            # Save the appointment changes
+            appointment.save()
+
+            # Return the updated appointment data
+            serializer = EditPatientSerializer(appointment)
+            
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Appointmentmodel.DoesNotExist:
+            return Response({"error": "Appointment not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

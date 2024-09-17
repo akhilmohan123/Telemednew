@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Appointmentmodel
 from user.models import User
 from doctor.models import DoctorModel
+from patient.models import PatientProfile
 class AppointmentSerializers(serializers.ModelSerializer):
     doctor_name = serializers.SerializerMethodField()
     doctor = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
@@ -31,7 +32,7 @@ class GetdoctorAppointmentserializer(serializers.ModelSerializer):
 
     class Meta:
         model = Appointmentmodel
-        fields = ["patient", "date", "time", "note", "doctor_name", "status","patient_name"]
+        fields = ["id","patient", "date", "time", "note", "doctor_name", "status","patient_name"]
 
     def get_doctor_name(self, obj):
         user = obj.doctor  # doctor is a User
@@ -40,3 +41,28 @@ class GetdoctorAppointmentserializer(serializers.ModelSerializer):
         user=obj.patient
         useris=User.objects.get(email=user)
         return f"{useris.first_name} {useris.last_name}"
+class GetspeceficSerializer(serializers.ModelSerializer):
+    doctor_name = serializers.SerializerMethodField()
+    patient_name=serializers.SerializerMethodField()
+    medical_history=serializers.SerializerMethodField()
+    class Meta:
+        model=Appointmentmodel
+        fields=["id","patient", "date", "time", "note", "doctor_name", "status","patient_name","medical_history","refer_doctor"]
+    def get_doctor_name(self, obj):
+        user = obj.doctor  # doctor is a User
+        return f"{user.first_name} {user.last_name}"
+    def get_patient_name(self,obj):
+        user=obj.patient
+        useris=User.objects.get(email=user)
+        return f"{useris.first_name} {useris.last_name}"
+    def get_medical_history(self,obj):
+       try:
+          user=obj.patient
+          useris=PatientProfile.objects.get(user=user)
+          return f"{useris.medical_history}"
+       except:
+           return "No Medical history"
+class EditPatientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Appointmentmodel
+        fields="__all__"
