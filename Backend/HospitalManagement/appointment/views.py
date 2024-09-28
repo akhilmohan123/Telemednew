@@ -1,13 +1,14 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .serializers import AppointmentSerializers,GetdoctorAppointmentserializer,GetspeceficSerializer,EditPatientSerializer
+from .serializers import AppointmentSerializers,GetdoctorAppointmentserializer,GetspeceficSerializer,EditPatientSerializer,AddMedicineSerializer,GetMedicineSerializer,GetSpeceficMedicineSerializer,GetReferAppointmentSerializer
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from patient.authentication import JWTAuthentication
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
-from . models import Appointmentmodel
+from . models import Appointmentmodel,Medicine
 from doctor.models import DoctorModel
+from patient.models import PatientProfile
 import jwt
 from rest_framework.exceptions import AuthenticationFailed
 from user.models import User
@@ -129,3 +130,59 @@ class EditDoctorView(APIView):
             return Response({"error": "Appointment not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+class AddMedicineViews(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication]
+    def post(self,request):
+        serializer=AddMedicineSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+        return Response(serializer.data,status=status.HTTP_200_OK)
+class GetMedicineView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    
+    def get(self, request):
+        try:
+            # Get the patient profile
+            patient = PatientProfile.objects.get(user=request.user)
+        except PatientProfile.DoesNotExist:
+            return Response({"error": "Patient profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Retrieve appointments for the patient
+        appointments = Appointmentmodel.objects.filter(patient=patient.id)
+
+        medicine_list = []
+    
+        for appointment in appointments:
+            medicines = Medicine.objects.filter(appointment=appointment)
+            medicine_list.extend(medicines)  # Extend the list with medicines from each appointment
+
+        # Serialize the medicine list
+        serializer = GetMedicineSerializer(medicine_list, many=True)
+        
+        # Return the serialized data
+        return Response(serializer.data, status=status.HTTP_200_OK)
+class GetSpeceficMedicine(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication]
+    def get(self,request,id):
+        medicine=Medicine.objects.get(id=id)
+        serializer=GetMedicineSerializer(medicine)
+        if serializer.data:
+            return Response(serializer.data,status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors,status=status.HTTP_204_NO_CONTENT)
+
+class GetReferAppointment(APIView):
+    def get(self,request):
+        user=self.request.user
+        appointment=Appointmentmodel.objects.get(patient=user , refer_doctor__isnull=False)      
+        if appointment:
+            serializer=GetReferAppointmentSerializer(appointment)
+            if serializer.data:
+                return Response(serializer.data,status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors,status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"message":"No Refer Found For this doctor"},status=status.HTTP_404_NOT_FOUND)

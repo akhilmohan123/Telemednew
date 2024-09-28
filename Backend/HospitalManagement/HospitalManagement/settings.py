@@ -40,21 +40,15 @@ INSTALLED_APPS = [
     'user',
     'patient',
     'doctor',
+    'videocall',
     'appointment',
     'rest_framework',
     'rest_framework.authtoken',
     "corsheaders",
-    'channels'
+    'channels',
+
 ]
-ASGI_APPLICATION="HospitalManagement.asgi.application"
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
-        },
-    },
-}
+
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -162,7 +156,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
-
 # Base url to serve media files
 MEDIA_URL = '/media/'
 # Path where media is stored
@@ -171,3 +164,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+ASGI_APPLICATION="HospitalManagement.asgi.application"
+CHANNEL_LAYERS={
+    "default":{
+        "BACKEND":"channels.layers.InMemoryChannelLayer"
+    }
+}
